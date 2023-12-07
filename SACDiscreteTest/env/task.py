@@ -3,53 +3,40 @@ import random
 
 task_cost_map = {}
 
-
+task_length = 30
+# vm_list = ['node1', 'node2', 'node3', 'node4']
+# vm_list_resource = [{'node1': [1000000, 16384]}, {'node2': [3000000, 32768]}, {'node3': [500000, 8192]}, {'node4': [1000000, 8192]}]
+vm_list = []
+# vm_list_resource = [{'node1': [1000000, 16384]}, {'node2': [2000000, 32768]}, {'node3': [3000000, 32768]}, {'node4': [400000000, 32768]}, {'node5': [5000000, 32768]}, {'node6': [6000000, 32768]}]
+vm_list_resource = [{'node1': [4000, 9000]}, {'node2': [4000, 9000]}, {'node3': [4000, 9000]}, {'node4': [4000, 9000]}]
+for node_item in vm_list_resource:
+    for key in node_item.keys():
+        vm_list.append(key)
 def init_task_cost_map():
     task_cost_map = {}
-    taskArr1 = []
-    taskArr2 = []
-    taskArr3 = []
-    taskArr4 = []
-    for i in range(10):
-        task1 = []
-        task1.append(random.randint(1, 3000))
-        task1.append(random.uniform(1,128))
-        task1.append(random.uniform(1,1000))
-        taskArr1.append(task1)
+    random.seed(100)
+    taskTotal = []
+    for idx, node in enumerate(vm_list):
+        task_node = []
+        for i in range(task_length):
+            task = []
+            # task.append(random.randint(1, 100 * (idx + 1)))
+            # task.append(random.uniform(1, 10 * (idx + 1)))
+            # task.append(random.uniform(1, 100 * (idx + 1)))
+            task.append(random.randint(1, 100))
+            task.append(random.uniform(1, 100))
+            task.append(random.uniform(1, 100))
+            task_node.append(task)
+        taskTotal.append(task_node)
 
-        task2 = []
-        task2.append(random.randint(1, 3000))
-        task2.append(random.uniform(1,128))
-        task2.append(random.uniform(1,1000))
-        taskArr2.append(task2)
-
-        task3 = []
-        task3.append(random.randint(1, 3000))
-        task3.append(random.uniform(1, 128))
-        task3.append(random.uniform(1, 1000))
-        taskArr3.append(task3)
-
-        task4 = []
-        task4.append(random.randint(1, 3000))
-        task4.append(random.uniform(1, 128))
-        task4.append(random.uniform(1, 1000))
-        taskArr4.append(task4)
-
-    task_cost_map['node1'] = taskArr1
-    task_cost_map['node2'] = taskArr2
-    task_cost_map['node3'] = taskArr3
-    task_cost_map['node4'] = taskArr4
+    for idx, node_name in enumerate(vm_list):
+        task_cost_map[node_name] = taskTotal[idx]
 
     return task_cost_map
 
-# 输出内容：二维数组，每行为在各个节点上消耗的资源
-# [[4.0010285, 0.0, 2.69980363, 0.0, 12.68250000],
-#  [4.0010285, 0.0, 2.69980363, 0.0, 12.68250000],
-#  [4.0010285, 0.0, 2.69980363, 0.0, 12.68250000]]
-# def get_task_info(task_id):
-#     task_info = {}
-#     for key in task_cost_map:
-#         node_task_cost_map = task_cost_map[key]
-#         task_cost = node_task_cost_map[task_id]
-#         task_info.extend(task_cost)
-#     return task_info
+def get_vm_list():
+    return vm_list
+
+
+def get_task_length():
+    return task_length

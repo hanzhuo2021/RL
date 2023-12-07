@@ -10,7 +10,7 @@ class SACD_agent():
 	def __init__(self, **kwargs):
 		# Init hyperparameters for agent, just like "self.gamma = opt.gamma, self.lambd = opt.lambd, ..."
 		self.__dict__.update(kwargs)
-		self.tau = 0.01
+		self.tau = 0.001
 		self.H_mean = 0
 		self.replay_buffer = ReplayBuffer(self.state_dim, self.dvc, max_size=int(1e6))
 
@@ -31,7 +31,7 @@ class SACD_agent():
 	def select_action(self, state, deterministic):
 		with torch.no_grad():
 			state = torch.FloatTensor(state[np.newaxis,:]).to(self.dvc) #from (s_dim,) to (1, s_dim)
-			probs = self.actor(state)
+			probs = self.actor(state, self.replay_buffer)
 			if deterministic:
 				a = probs.argmax(-1).item()
 			else:
@@ -44,7 +44,7 @@ class SACD_agent():
 		#------------------------------------------ Train Critic ----------------------------------------#
 		'''Compute the target soft Q value'''
 		with torch.no_grad():
-			next_probs = self.actor(s_next) #[b,a_dim]
+			next_probs = self.actor(s_next, self.replay_buffer) #[b,a_dim]
 			next_log_probs = torch.log(next_probs+1e-8) #[b,a_dim]
 			next_q1_all, next_q2_all = self.q_critic_target(s_next)  # [b,a_dim]
 			min_next_q_all = torch.min(next_q1_all, next_q2_all)
@@ -64,7 +64,7 @@ class SACD_agent():
 			#Freeze Q net, so you don't waste time on computing its gradient while updating Actor.
 			params.requires_grad = 	False
 
-		probs = self.actor(s) #[b,a_dim]
+		probs = self.actor(s, self.replay_buffer) #[b,a_dim]
 		log_probs = torch.log(probs + 1e-8) #[b,a_dim]
 		with torch.no_grad():
 			q1_all, q2_all = self.q_critic(s)  #[b,a_dim]
@@ -95,11 +95,11 @@ class SACD_agent():
 		for param, target_param in zip(self.q_critic.parameters(), self.q_critic_target.parameters()):
 			target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
-	def save(self, timestep, EnvName):
-		torch.save(self.actor.state_dict(), f"./model/sacd_actor_{timestep}_{EnvName}.pth")
-		torch.save(self.q_critic.state_dict(), f"./model/sacd_critic_{timestep}_{EnvName}.pth")
-
-
-	def load(self, timestep, EnvName):
-		self.actor.load_state_dict(torch.load(f"./model/sacd_actor_{timestep}_{EnvName}.pth"))
-		self.q_critic.load_state_dict(torch.load(f"./model/sacd_critic_{timestep}_{EnvName}.pth"))
+	# def save(self, timestep, EnvName):
+	# 	torch.save(self.actor.state_dict(), f"./model/sacd_actor_{timestep}_{EnvName}.pth")
+	# 	torch.save(self.q_critic.state_dict(), f"./model/sacd_critic_{timestep}_{EnvName}.pth")
+	#
+	#
+	# def load(self, timestep, EnvName):
+	# 	self.actor.load_state_dict(torch.load(f"./model/sacd_actor_{timestep}_{EnvName}.pth"))
+	# 	self.q_critic.load_state_dict(torch.load(f"./model/sacd_critic_{timestep}_{EnvName}.pth"))
