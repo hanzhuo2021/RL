@@ -55,6 +55,7 @@ class SACD_agent():
 		q1_all, q2_all = self.q_critic(s) #[b,a_dim]
 		q1, q2 = q1_all.gather(1, a), q2_all.gather(1, a) #[b,1]
 		q_loss = F.mse_loss(q1, target_Q) + F.mse_loss(q2, target_Q)
+		# print(q_loss)
 		self.q_critic_optimizer.zero_grad()
 		q_loss.backward()
 		self.q_critic_optimizer.step()

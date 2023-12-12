@@ -3,7 +3,7 @@ import random
 
 task_cost_map = {}
 
-task_length = 30
+task_length = 50
 # vm_list = ['node1', 'node2', 'node3', 'node4']
 # vm_list_resource = [{'node1': [1000000, 16384]}, {'node2': [3000000, 32768]}, {'node3': [500000, 8192]}, {'node4': [1000000, 8192]}]
 vm_list = []

@@ -4,8 +4,8 @@ import time
 
 import numpy as np
 
-import task, node
-
+from ilabEnv import task, node
+from SACDiscreteTest.ga.ga import GA
 
 def is_ready(node_load, task_cost):
     for index, value in enumerate(node_load):
@@ -31,10 +31,11 @@ def remove_load(node_load, task_cost):
 class Environment:
     def __init__(self):
         # 环境初始化时的固定值：节点列表、任务列表、任务代价列表
-        self.NODE_LIST = ["node1", "node2", "node3", "node4"]
-        self.bingfashu = 5
-        self.TASK_LIST = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-                          27]
+        self.NODE_LIST = task.get_NODE_LIST()
+        self.bingfashu = 1
+        # self.TASK_LIST = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+        #                   27, 28, 29, 30]
+        self.TASK_LIST = task.get_task_list()
         self.task_cost_map = task.init_task_cost_map()
 
         # 环境初始化时的变量：开始时间、排队队列、队列长度、执行队列、等待队列
@@ -42,13 +43,14 @@ class Environment:
         self.node_wait_queue = {}
         for node_name in self.NODE_LIST:
             # 执行队列，字典类，每个节点一个队列（小根堆）
-            self.node_exec_priority_queue[node_name] = queue.PriorityQueue()
+            self.node_exec_priority_queue[node_name] = []
             # 等待队列，字典类，每个节点一个队列（顺序队列）
-            self.node_wait_queue[node_name] = queue.Queue()
+            self.node_wait_queue[node_name] = []
         self.BEGIN_TIME = None
         self.queue_queue = queue.PriorityQueue()
         self.request_num = 0
-
+        # 是否使用遗传算法
+        self.fitness = 0.0
         # 输入到神经网络中的环境状态变量
         self.task_arrive_time = None
         self.task_id = None
@@ -57,14 +59,17 @@ class Environment:
         self.node_task_cost = {}
         self.node_wait_time = {}
 
+    def set_fitness(self, fitness):
+        self.fitness = fitness
+
     def reset(self):
         # 环境初始化时的变量：开始时间、排队队列、队列长度、执行队列、等待队列
         self.node_exec_priority_queue = {}
         self.node_wait_queue = {}
         for node_name in self.NODE_LIST:
             # 执行队列，字典类，每个节点一个队列（小根堆）
-            self.node_exec_priority_queue[node_name] = queue.PriorityQueue()
-            self.node_exec_priority_queue[node_name].queue.clear()
+            self.node_exec_priority_queue[node_name] = []
+            # self.node_exec_priority_queue[node_name].queue.clear()
             # 等待队列，字典类，每个节点一个队列（顺序队列）
             self.node_wait_queue[node_name] = queue.Queue()
             self.node_wait_queue[node_name].queue.clear()
@@ -102,62 +107,24 @@ class Environment:
 
         node_name = self.NODE_LIST[action]
 
-        # 获取奖励
-        reward = self.get_reward(node_name)
-
         arrive_time, task_id = self.queue_queue.get()
         task_cost = self.task_cost_map[node_name][task_id]
 
-        # 异常情况：空节点全部资源都不足以支持当前任务完成
-        # if self.node_exec_priority_queue[node_name].empty() and not is_ready(self.node_load[node_name], task_cost):
-        #     print('[env] [step] [error: exec list is empty but resources is not enough]')
-        #     return [], float(), self.queue_queue.empty()
-
         # 等待队列为空且资源充足时，直接将任务加入执行队列
         if self.node_wait_queue[node_name].empty() and is_ready(self.node_load[node_name], task_cost):
-            self.node_exec_priority_queue[node_name].put((arrive_time + task_cost[-1] + self.node_wait_time[node_name],
-                                                          self.node_wait_time[node_name], task_cost))
+            # self.node_exec_priority_queue[node_name].put((arrive_time + task_cost[-1] + self.node_wait_time[node_name],
+            #                                               self.node_wait_time[node_name], task_cost))
+            self.node_exec_priority_queue[node_name].append((arrive_time + task_cost[-1], task_cost))
             self.node_load[node_name] = add_load(self.node_load[node_name], task_cost)
-
-        # 等待队列不为空时，调整执行队列和等待队列
-        else:
-            # 1. 将已经执行完的执行队列任务出队
-            while True:
-                if self.node_exec_priority_queue[node_name].empty():
-                    break
-                exec_end_time, exec_wait_time, exec_task_cost = self.node_exec_priority_queue[node_name].queue[0]
-                if exec_end_time >= arrive_time:
-                    break
-                # 出队，减少负载
-                self.node_exec_priority_queue[node_name].get()
-                self.node_load[node_name] = remove_load(self.node_load[node_name], exec_task_cost)
-
-            # 2. 将已经执行完的等待队列任务出队
-            while True:
-                if self.node_wait_queue[node_name].empty():
-                    break
-                wait_end_time, wait_wait_time, wait_task_cost = self.node_wait_queue[node_name].queue[0]
-                if wait_end_time >= arrive_time:
-                    break
-                self.node_wait_queue[node_name].get()
-
-            # 3. 将到达任务放入排队队列
-            self.node_wait_queue[node_name].put((arrive_time + task_cost[-1] + self.node_wait_time[node_name],
-                                                 self.node_wait_time[node_name], task_cost))
-
-            # 4. 当等待队列不为空时，且资源充足时，将等待队列不断出队加入到执行队列中
-            while True:
-                if self.node_wait_queue[node_name].empty():
-                    break
-                wait_end_time, wait_wait_time, wait_task_cost = self.node_wait_queue[node_name].queue[0]
-                if not is_ready(self.node_load[node_name], wait_task_cost):
-                    break
-                # 等待队列出队到执行队列，增加负载
-                self.node_exec_priority_queue[node_name].put(self.node_wait_queue[node_name].get())
-                self.node_load[node_name] = add_load(self.node_load[node_name], wait_task_cost)
 
         # 判断是否结束
         done = self.queue_queue.empty()
+        if done:
+            # 获取奖励
+            reward = self.get_reward(node_name)
+        else:
+            reward = self.get_reward_not_done(node_name)
+
         state = []
         if not done:
             # 更新环境状态
@@ -188,10 +155,10 @@ class Environment:
             # 环境状态4：任务在每个节点上运行时间
             # state.append(self.node_task_cost[node_name][-1])
 
-        for node_name in self.NODE_LIST:
-            self.node_wait_time[node_name] = self.get_wait_time(node_name)
-            # 环境状态5：任务在每个节点上需要等待的时间
-            state.append(self.node_wait_time[node_name])
+        # for node_name in self.NODE_LIST:
+        #     self.node_wait_time[node_name] = self.get_wait_time(node_name)
+        #     # 环境状态5：任务在每个节点上需要等待的时间
+        #     state.append(self.node_wait_time[node_name])
 
         return state
 
@@ -236,12 +203,37 @@ class Environment:
     # 获取奖励
     def get_reward(self, node_name):
         reward = [1.0, 0.3, -0.7]
-        wait_time_list = list(self.node_wait_time.values())
-        wait_time_list.sort()
-        wait_time = self.node_wait_time[node_name]
-        index = wait_time_list.index(wait_time)
+        # wait_time_list = list(self.node_wait_time.values())
+        # wait_time_list.sort()
+        # wait_time = self.node_wait_time[node_name]
+        # index = wait_time_list.index(wait_time)
         exec_time = self.node_task_cost[node_name][-1]
+        # if self.is_use_GA:
+        #     fitness = self.get_best_fitness()
+        # else:
+        #     fitness = 0.0
         # return reward[index]
         w = 0.7
-        return - (w * exec_time + (1 - w) * wait_time) / 1000
+        # return - (w * exec_time + (1 - w) * wait_time) / 1000
+        makespan = self.get_makespan()
+        return -(makespan + self.fitness) / 10
+        # return -(exec_time) / 1000
 
+    def get_reward_not_done(self, node_name):
+        reward = [1.0, 0.3, -0.7]
+        exec_time = self.node_task_cost[node_name][-1]
+        return -(exec_time) / 1000
+
+    # 获取最小完工时间
+    def get_makespan(self):
+        makespan = 0.0
+        for key in self.node_exec_priority_queue.keys():
+            queue = self.node_exec_priority_queue[key]
+            finish_time = 0.0
+            for node in queue:
+                finish_time += node[1][-1]
+            # finish_time为0.0的不需要参与计算，因为其没有任务
+            if finish_time != 0.0:
+                if finish_time > makespan:
+                    makespan = finish_time
+        return makespan

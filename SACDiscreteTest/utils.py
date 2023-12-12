@@ -59,7 +59,8 @@ class Policy_Net(nn.Module):
 		# std = replay_buffer.state_std()
 		# s = s - mean
 		# s = s / (std + 1e-8)
-		h = self.fc0(s)
+		# replay_buffer.state_mean()
+		h = self.fc0(s/100000)
 		h3 = self.fc1(h)
 		logits = self.fc2(h3)
 		# logits = self.P(s)
@@ -96,6 +97,15 @@ class ReplayBuffer(object):
 		return self.s[ind], self.a[ind], self.r[ind], self.s_next[ind], self.dw[ind]
 
 	def state_mean(self):
+		# 创建一个布尔掩码来识别非零元素
+		mask = self.s != 0
+
+		# 计算非零元素的均值和标准差
+		mean = self.s[mask].mean()
+		std = self.s[mask].std()
+
+		# 对非零元素进行标准化
+		self.s[mask] = (self.s[mask] - mean) / (std + 1e-8)
 		return torch.mean(self.s, dim=0)
 
 	def state_std(self):

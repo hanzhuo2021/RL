@@ -79,6 +79,14 @@ class Environment:
         return state
 
     def step(self, action):
+        if action <= - 1.0 / 4:
+            action = 0
+        elif action <= 2.0 / 4:
+            action = 1
+        elif action <= 3.0 / 4:
+            action = 2
+        else:
+            action = 3
         global reward
         node_name = self.NODE_LIST[action]
         task_id = self.TASK_LIST[self.ptr]
@@ -154,6 +162,7 @@ class Environment:
         # else:
         #     return (1/(makespan + fitness)) * 10
         # return 1/makespan + 1/(-fitness-makespan)
+        # print(makespan)
         return (1/makespan) * 100
         # return -(fitness + makespan) / (-fitness) * (self.ptr + 1)
 

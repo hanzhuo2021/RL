@@ -18,11 +18,14 @@ class GA:
         # print([indi['value'] for indi in self.population.get_top_n_individuals(10)])
 
     def get_top_n_individuals(self, n):
-        print([indi['value'] for indi in self.population.get_top_n_individuals(10)])
-        return self.population.get_top_n_individuals(n)
+        sorted_population, sorted_fitnesses = self.population.get_top_n_individuals(n)
+        print([indi.cal_fitness() for indi in sorted_population])
+        return sorted_population
 
 
 if __name__ == '__main__':
-    ga = GA(get_task_length(), get_vm_list())
+    NODE_LIST = ["node1", "node2", "node3", "node4"]
+    TASK_LIST = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    ga = GA(len(TASK_LIST), NODE_LIST)
     ga.run()
     ga.get_top_n_individuals(10)

@@ -6,6 +6,7 @@
         <entryData>
           <resourceRoots>
             <path value="file://$PROJECT_DIR$/5.1 SAC-DiscreteTest/env" />
+            <path value="file://$PROJECT_DIR$/D2SAC-TS" />
           </resourceRoots>
         </entryData>
       </entry>

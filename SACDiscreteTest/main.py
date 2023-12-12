@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from env.myEnv import Environment
 import random
 
+
 '''Hyperparameter Setting'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--dvc', type=str, default='cuda', help='running device: cuda or cpu')
@@ -46,7 +47,7 @@ def main():
 	opt.state_dim = len(env.observation_space)
 	opt.action_dim = len(env.action_space)
 	opt.max_e_steps = 500
-	opt.Max_train_steps = 100000
+	opt.Max_train_steps = 70000
 
 	# Seed Everything.0
 	env_seed = opt.seed
@@ -126,6 +127,7 @@ def main():
 				# 	agent.save(int(total_steps/1000), BriefEnvName[opt.EnvIdex])
 	# env.close()
 	# eval_env.close()
+	print(eval_env.allocation_table)
 	plt.plot(xList, yList)
 	plt.xlabel('Episodes')
 	plt.ylabel('Returns')
