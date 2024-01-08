@@ -6,11 +6,18 @@
       <sourceFolder url="file://$MODULE_DIR$/D2SAC-TS" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ilabEnv" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 3.9.18 (sftp://root@10.10.10.215:20016/root/anaconda3/envs/awp/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.9.18 (sftp://root@10.10.10.215:20145/root/anaconda3/envs/awp/bin/python) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
     <option name="myDocStringFormat" value="Plain" />
+  </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/D2SAC-TS/ga" />
+      </list>
+    </option>
   </component>
 </module>

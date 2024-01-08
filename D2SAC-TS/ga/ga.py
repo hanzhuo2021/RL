@@ -1,5 +1,6 @@
-from SACDiscreteTest.ga.population import  Population
-from SACDiscreteTest.env import *
+from ga.population import Population
+from ilabEnv import taskYiLai
+import pandas as pd
 class GA:
     def __init__(self, task_list, vm_list, init_task_cost_map):
         self.task_list = task_list
@@ -25,8 +26,15 @@ class GA:
 
 
 if __name__ == '__main__':
-    NODE_LIST = ["node1", "node2", "node3", "node4"]
-    TASK_LIST = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    ga = GA(TASK_LIST, NODE_LIST)
+    NODE_LIST = taskYiLai.get_NODE_LIST()
+    TASK_LIST = taskYiLai.get_task_list()
+    init_task_cost_map = taskYiLai.init_task_cost_map()
+    ga = GA(TASK_LIST, NODE_LIST, init_task_cost_map)
     ga.run()
-    ga.get_top_n_individuals(10)
+    best_individual = ga.get_top_n_individuals(1)
+    makespan = -best_individual[0].cal_fitness()
+    makespan_field = {"best": [makespan], "final": [makespan]}
+    makespanFrame = pd.DataFrame(makespan_field)
+    # makespanFrame.to_csv("/opt/data/GA/makespan50.csv", index=False, sep=',')
+    makespanFrame.to_csv("/opt/data/GA/makespanServer10.csv", index=False, sep=',')
+    print(makespan)

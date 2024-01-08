@@ -1,6 +1,6 @@
 import numpy as np
 
-from SACDiscreteTest.ga.gene import Gene
+from ga.gene import Gene
 
 
 class Individual:

@@ -4,6 +4,8 @@ from copy import deepcopy
 import numpy as np
 import paddle
 from paddle.distribution import Normal
+from ilabEnv.taskYiLai import *
+from ilabEnv.nodeYiLai import *
 
 
 class DE(object):
@@ -20,6 +22,7 @@ class DE(object):
         self.size = size
         self.cur_round = 1
         self.cr = cr
+        self.state_dim = 44
         self.object_function_values = [self.objective_function(v) for v in self.population]
         self.mutant = None
 
@@ -49,14 +52,39 @@ class DE(object):
             action = action_numpy
 
             # 动作转换
-            if action <= - 1.0 / 3:
+            # if action <= - 1.0 / 3:
+            #     action = 0
+            # elif action <= 1.0 / 3:
+            #     action = 1
+            # else:
+            #     action = 2
+            # if action <= - 1.0 / 4:
+            #     action = 0
+            # elif action <= 2.0 / 4:
+            #     action = 1
+            # elif action <= 3.0 / 4:
+            #     action = 2
+            # else:
+            #     action = 3
+            buckets = np.linspace(-1, 1, len(get_NODE_LIST()) + 1)
+            # 映射连续动作到离散动作
+            discrete_action = np.digitize(action, buckets, right=True)[0]
+            if discrete_action == 0:
                 action = 0
-            elif action <= 1.0 / 3:
-                action = 1
             else:
-                action = 2
+                action = discrete_action - 1
 
-            episode_reward -= wait_time_list[action] / 1000
+            temp_state = state.cpu().numpy()[0]
+            # exec_time = temp_state[50 + (action + 1) * 6 - 1]
+            cpu_load = []
+            mem_load = []
+            # task_cost_map = init_task_cost_map()
+            de_node_load = get_node_load(get_NODE_LIST()).copy()
+            for node_name in de_node_load:
+                cpu_load.append(de_node_load[node_name][0])
+                mem_load.append(de_node_load[node_name][1])
+            episode_reward -= (np.std(cpu_load) + np.std(cpu_load))
+            # episode_reward -= wait_time_list[action] / 1000
 
             # reward_list = [1.0, 0.3, -0.7]
             # if wait_time_list[action] == 0.0:

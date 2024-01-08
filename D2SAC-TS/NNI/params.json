@@ -1,0 +1,10 @@
+{
+  "WARMUP_STEPS": {"_type": "choice", "_value": [3000, 4000, 5000, 6000, 7000]},
+  "MEMORY_SIZE": {"_type": "choice", "_value": [100000, 500000, 1000000, 1500000]},
+  "BATCH_SIZE": {"_type": "choice", "_value": [256, 512]},
+  "GAMMA": {"_type": "uniform", "_value": [0.9, 0.99]},
+  "ACTOR_LR": {"_type": "uniform", "_value": [0.0003, 0.01]},
+  "CRITIC_LR": {"_type": "uniform", "_value": [0.0003, 0.01]},
+  "ALPHA": {"_type": "uniform", "_value": [0.05, 0.5]},
+  "TAU": {"_type": "uniform", "_value": [0.0007, 0.002]}
+}

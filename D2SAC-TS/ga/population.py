@@ -1,6 +1,6 @@
 import random
 
-from SACDiscreteTest.ga.individual import Individual
+from ga.individual import Individual
 
 
 class Population:

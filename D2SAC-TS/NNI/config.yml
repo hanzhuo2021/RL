@@ -1,0 +1,18 @@
+authorName: hanzhuo
+experimentName: d2sac
+searchSpacePath: /opt/awp/D2SAC-TS/NNI/params.json
+trialConcurrency: 2
+maxExecDuration: 100h
+maxTrialNum: 35
+trainingServicePlatform: local
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: minimize
+trial:
+  command: python /opt/awp/D2SAC-TS/main.py
+  codeDir: /opt/awp/
+  gpuNum: 1
+localConfig:
+  useActiveGpu: false

@@ -11,13 +11,15 @@ class Actor(paddle.nn.Layer):
                 nn.initializer.XavierUniform(m.weight)
 
         self.l1 = nn.Linear(state_dim, 256)
+        self.bn1 = nn.BatchNorm1D(256)
         self.l2 = nn.Linear(256, 256)
+        self.bn2 = nn.BatchNorm1D(256)
         self.mean_linear = nn.Linear(256, action_dim)
         self.std_linear = nn.Linear(256, action_dim)
 
     def forward(self, state):
-        x = F.relu(self.l1(state))
-        x = F.relu(self.l2(x))
+        x = F.relu(self.bn1(self.l1(state)))
+        x = F.relu(self.bn2(self.l2(x)))
 
         act_mean = self.mean_linear(x)
         act_std = self.std_linear(x)
